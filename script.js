@@ -1,124 +1,107 @@
-let filesData = [];
-let zipBlob = null;
+let generatedFiles = []; // simpan hasil generate VCF
 
-// Parse TXT menjadi list nomor
-function parseTxt(content) {
-  return content
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
-}
+document.getElementById('processFilesBtn').addEventListener('click', function () {
+  const files = document.getElementById('file-input').files;
+  const fileAreas = document.getElementById('file-areas');
+  const globalContactName = document.getElementById('globalContactNameInput').value.trim();
 
-// Generate isi VCF
-function generateVCF(name, numbers) {
-  return numbers.map((num, i) => {
-    let contactName = `${name} ${i+1}`;
-    return `BEGIN:VCARD\nVERSION:3.0\nFN:${contactName}\nTEL:${num}\nEND:VCARD`;
-  }).join("\n");
-}
+  generatedFiles = [];
+  fileAreas.innerHTML = ''; // Kosongkan div sebelum menambahkan textarea baru
 
-document.getElementById("processFile").addEventListener("click", () => {
-  const input = document.getElementById("txtFile");
-  const globalName = document.getElementById("globalName").value.trim();
-  filesData = [];
-  document.getElementById("filesContainer").innerHTML = "";
-
-  if (!input.files.length) {
-    alert("Pilih file TXT terlebih dahulu!");
-    return;
-  }
-
-  Array.from(input.files).forEach(file => {
+  Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => {
-      const numbers = parseTxt(e.target.result);
-      filesData.push({
-        originalName: file.name,
-        vcfName: file.name.replace(".txt", ".vcf"),
-        numbers,
-        globalName
+    reader.onload = function (e) {
+      const textArea = document.createElement('textarea');
+      textArea.classList.add('small-textarea');
+      textArea.value = e.target.result;
+
+      const fileNameInput = document.createElement('input');
+      fileNameInput.type = 'text';
+      fileNameInput.placeholder = 'Masukkan nama file VCF';
+      fileNameInput.classList.add('file-name-input');
+
+      const fileNameLabel = document.createElement('label');
+      fileNameLabel.textContent = `Nama File Asal: ${file.name}`;
+      fileNameLabel.classList.add('file-name-label');
+
+      const generateButton = document.createElement('button');
+      generateButton.textContent = 'Generate VCF';
+      generateButton.classList.add('generate-vcf-btn');
+
+      generateButton.addEventListener('click', () => {
+        const lines = textArea.value.split('\n').map(line => line.trim());
+        const filename = fileNameInput.value.trim() || file.name.replace(/\.[^/.]+$/, '');
+        const contactName = globalContactName || file.name.replace(/\.[^/.]+$/, '');
+
+        let vcfContent = '';
+        let contactIndex = 1;
+
+        lines.forEach(line => {
+          if (line) {
+            let phoneNumber = line;
+            if (!phoneNumber.startsWith('+')) {
+              phoneNumber = '+' + phoneNumber;
+            }
+            vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:${contactName} ${contactIndex}\nTEL:${phoneNumber}\nEND:VCARD\n\n`;
+            contactIndex++;
+          }
+        });
+
+        if (vcfContent) {
+          // Simpan hasil ke generatedFiles
+          generatedFiles.push({ name: `${filename}.vcf`, content: vcfContent });
+
+          // Download langsung juga (fungsi lama tetap jalan)
+          const blob = new Blob([vcfContent], { type: 'text/vcard' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${filename}.vcf`;
+          a.textContent = `Download ${filename}.vcf`;
+          a.style.display = 'block';
+          a.click();
+          URL.revokeObjectURL(url);
+        }
       });
-      renderFiles();
+
+      fileAreas.appendChild(fileNameLabel);
+      fileAreas.appendChild(fileNameInput);
+      fileAreas.appendChild(textArea);
+      fileAreas.appendChild(generateButton);
     };
     reader.readAsText(file);
   });
 });
 
-function renderFiles() {
-  const container = document.getElementById("filesContainer");
-  container.innerHTML = "";
-  filesData.forEach((f, idx) => {
-    const div = document.createElement("div");
-    div.className = "file-block";
-    div.innerHTML = `
-      <h3>Nama File Asal: ${f.originalName}</h3>
-      <label>Nama File VCF:</label>
-      <input type="text" class="vcf-name-input" data-idx="${idx}" value="${f.vcfName}">
-      <label>Isi Nomor:</label>
-      <textarea data-idx="${idx}">${f.numbers.join("\n")}</textarea>
-      <button onclick="downloadSingle(${idx})">Generate VCF</button>
-    `;
-    container.appendChild(div);
-  });
-
-  document.querySelectorAll(".vcf-name-input").forEach(inp => {
-    inp.addEventListener("input", e => {
-      filesData[e.target.dataset.idx].vcfName = e.target.value.trim() || "untitled.vcf";
-    });
-  });
-
-  container.querySelectorAll("textarea").forEach(area => {
-    area.addEventListener("input", e => {
-      filesData[e.target.dataset.idx].numbers = e.target.value.split(/\r?\n/).filter(x => x.trim().length);
-    });
-  });
-}
-
-function downloadSingle(idx) {
-  const f = filesData[idx];
-  const vcf = generateVCF(f.globalName || f.vcfName.replace(".vcf",""), f.numbers);
-  const blob = new Blob([vcf], { type: "text/vcard" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = f.vcfName;
-  a.click();
-}
-
-document.getElementById("processZip").addEventListener("click", async () => {
-  if (!filesData.length) {
-    alert("Proses file dulu sebelum membuat ZIP!");
+// Tombol Proses ZIP
+document.getElementById('processZipBtn').addEventListener('click', function () {
+  if (generatedFiles.length === 0) {
+    alert('Belum ada file VCF yang digenerate!');
     return;
   }
-  const zip = new JSZip();
-  filesData.forEach(f => {
-    const vcf = generateVCF(f.globalName || f.vcfName.replace(".vcf",""), f.numbers);
-    zip.file(f.vcfName, vcf);
-  });
-  zipBlob = await zip.generateAsync({ type: "blob" });
-  document.getElementById("downloadZip").disabled = false;
-  alert("ZIP berhasil diproses, klik Download ZIP!");
+  document.getElementById('downloadZipBtn').disabled = false;
+  alert('File siap diunduh dalam bentuk ZIP');
 });
 
-document.getElementById("downloadZip").addEventListener("click", () => {
-  if (!zipBlob) return;
+// Tombol Download ZIP
+document.getElementById('downloadZipBtn').addEventListener('click', function () {
+  if (generatedFiles.length === 0) return;
 
-  let zipNameInput = document.getElementById("zipName").value.trim();
-  let fileName = "contacts.zip";
+  const zip = new JSZip();
+  generatedFiles.forEach(file => {
+    zip.file(file.name, file.content);
+  });
 
-  if (zipNameInput) {
-    fileName = zipNameInput.endsWith(".zip") ? zipNameInput : zipNameInput + ".zip";
-  } else {
-    // otomatis: cek nama file
-    let baseNames = filesData.map(f => f.vcfName.replace(".vcf", ""));
-    let prefix = baseNames[0].replace(/\d+/g, "");
-    let nums = baseNames.map(n => parseInt(n.match(/\d+/)?.[0] || "NaN")).filter(n => !isNaN(n));
-    if (nums.length === baseNames.length && new Set(baseNames.map(n => n.replace(/\d+/g,""))).size === 1) {
-      fileName = `${prefix}${Math.min(...nums)}-${Math.max(...nums)}.zip`;
-    }
-  }
+  // Tentukan nama zip
+  let zipNameInput = document.getElementById('zipFileNameInput').value.trim();
+  let zipName = zipNameInput ? zipNameInput + '.zip' : 'contacts.zip';
 
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(zipBlob);
-  a.download = fileName;
-  a.click();
+  zip.generateAsync({ type: 'blob' }).then(function (content) {
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(content);
+    a.href = url;
+    a.download = zipName;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 });
