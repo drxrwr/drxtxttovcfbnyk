@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>TXT to VCF Converter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>TXT to VCF Converter</h1>
+
+  <div class="form-container">
+    <label>Pilih File TXT:</label>
+    <input type="file" id="txtFile" accept=".txt" multiple>
+
+    <label>Nama Kontak Global:</label>
+    <input type="text" id="globalName" placeholder="Misal: Mario">
+
+    <label>Nama File ZIP (opsional):</label>
+    <input type="text" id="zipName" placeholder="Kosongkan untuk otomatis">
+
+    <div class="buttons">
+      <button id="processFile">Proses File</button>
+      <button id="processZip">Proses ZIP</button>
+      <button id="downloadZip" disabled>Download ZIP</button>
+    </div>
+  </div>
+
+  <div id="filesContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
