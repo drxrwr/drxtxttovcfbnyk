@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TXT to VCF Converter</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
   <h1>TXT to VCF Converter</h1>
 
-  <div class="form-container">
-    <label>Pilih File TXT:</label>
-    <input type="file" id="txtFile" accept=".txt" multiple>
+  <div class="container">
+    <!-- Input untuk mengunggah file TXT -->
+    <label for="file-input">Pilih File TXT:</label>
+    <input type="file" id="file-input" accept=".txt" multiple>
 
-    <label>Nama Kontak Global:</label>
-    <input type="text" id="globalName" placeholder="Misal: Mario">
+    <!-- Input untuk memasukkan nama kontak global -->
+    <label for="globalContactNameInput">Nama Kontak Global (Opsional):</label>
+    <input type="text" id="globalContactNameInput" placeholder="Masukkan nama kontak global">
 
-    <label>Nama File ZIP (opsional):</label>
-    <input type="text" id="zipName" placeholder="Kosongkan untuk otomatis">
+    <!-- Input nama file zip -->
+    <label for="zipFileNameInput">Nama File ZIP (Opsional):</label>
+    <input type="text" id="zipFileNameInput" placeholder="Masukkan nama file zip">
 
-    <div class="buttons">
-      <button id="processFile">Proses File</button>
-      <button id="processZip">Proses ZIP</button>
-      <button id="downloadZip" disabled>Download ZIP</button>
-    </div>
+    <!-- Tombol untuk memulai proses konversi -->
+    <button id="processFilesBtn">Proses File</button>
+    <button id="processZipBtn">Proses ZIP</button>
+    <button id="downloadZipBtn" disabled>Download ZIP</button>
+
+    <!-- Area untuk menampilkan hasil setelah file diunggah -->
+    <div id="file-areas"></div>
   </div>
 
-  <div id="filesContainer"></div>
-
+  <!-- Hubungkan ke file JavaScript eksternal -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="script.js"></script>
+
 </body>
 </html>
