@@ -37,7 +37,7 @@ input[type="text"] {
 
 textarea {
   width: 100%;
-  height: 200px;
+  height: 150px;
   padding: 10px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
@@ -65,10 +65,10 @@ button:hover {
   font-weight: bold;
 }
 
-.small-textarea {
-  height: 150px;
+.file-name-input {
+  margin-bottom: 10px;
 }
 
 .generate-vcf-btn {
-  margin-top: 10px;
+  margin-bottom: 20px;
 }
