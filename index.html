@@ -1,40 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TXT to VCF Converter</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <h1>TXT to VCF Converter</h1>
 
-  <div class="container">
-    <!-- Input untuk mengunggah file TXT -->
-    <label for="file-input">Pilih File TXT:</label>
-    <input type="file" id="file-input" accept=".txt" multiple>
-
-    <!-- Input untuk memasukkan nama kontak global -->
-    <label for="globalContactNameInput">Nama Kontak Global (Opsional):</label>
-    <input type="text" id="globalContactNameInput" placeholder="Masukkan nama kontak global">
-
-    <!-- Input nama file zip -->
-    <label for="zipFileNameInput">Nama File ZIP (Opsional):</label>
-    <input type="text" id="zipFileNameInput" placeholder="Masukkan nama file zip">
-
-    <!-- Tombol untuk memulai proses konversi -->
-    <button id="processFilesBtn">Proses File</button>
-    <button id="processZipBtn">Proses ZIP</button>
-    <button id="downloadZipBtn" disabled>Download ZIP</button>
-
-    <!-- Area untuk menampilkan hasil setelah file diunggah -->
-    <div id="file-areas"></div>
+  <div class="form-section">
+    <label for="txtFile">Pilih File TXT:</label>
+    <input type="file" id="txtFile" accept=".txt">
   </div>
 
-  <!-- Hubungkan ke file JavaScript eksternal -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="script.js"></script>
+  <div class="form-section">
+    <label for="globalName">Nama Kontak Global:</label>
+    <input type="text" id="globalName" placeholder="Opsional">
+  </div>
 
+  <div class="form-section">
+    <label for="zipName">Nama File ZIP:</label>
+    <input type="text" id="zipName" placeholder="contoh: kontak_saya">
+  </div>
+
+  <div class="buttons">
+    <button onclick="processFile()">Proses File</button>
+    <button onclick="processZip()">Proses ZIP</button>
+    <button onclick="downloadZip()">Download ZIP</button>
+  </div>
+
+  <div id="fileOutputs"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
