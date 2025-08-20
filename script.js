@@ -1,12 +1,11 @@
-let generatedFiles = []; // simpan hasil generate VCF
+let generatedFiles = [];
 
 document.getElementById('processFilesBtn').addEventListener('click', function () {
   const files = document.getElementById('file-input').files;
   const fileAreas = document.getElementById('file-areas');
-  const globalContactName = document.getElementById('globalContactNameInput').value.trim();
 
   generatedFiles = [];
-  fileAreas.innerHTML = ''; // Kosongkan div sebelum menambahkan textarea baru
+  fileAreas.innerHTML = '';
 
   Array.from(files).forEach(file => {
     const reader = new FileReader();
@@ -29,39 +28,20 @@ document.getElementById('processFilesBtn').addEventListener('click', function ()
       generateButton.classList.add('generate-vcf-btn');
 
       generateButton.addEventListener('click', () => {
-        const lines = textArea.value.split('\n').map(line => line.trim());
+        const globalContactName = document.getElementById('globalContactNameInput').value.trim();
+        const lines = textArea.value.split('\n').map(line => line.trim()).filter(l => l);
         const filename = fileNameInput.value.trim() || file.name.replace(/\.[^/.]+$/, '');
-        const contactName = globalContactName || file.name.replace(/\.[^/.]+$/, '');
+        const contactBase = globalContactName || filename;
 
         let vcfContent = '';
-        let contactIndex = 1;
-
-        lines.forEach(line => {
-          if (line) {
-            let phoneNumber = line;
-            if (!phoneNumber.startsWith('+')) {
-              phoneNumber = '+' + phoneNumber;
-            }
-            vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:${contactName} ${contactIndex}\nTEL:${phoneNumber}\nEND:VCARD\n\n`;
-            contactIndex++;
-          }
+        lines.forEach((num, idx) => {
+          let phone = num.startsWith('+') ? num : `+${num}`;
+          vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:${contactBase} ${idx + 1}\nTEL:${phone}\nEND:VCARD\n\n`;
         });
 
-        if (vcfContent) {
-          // Simpan hasil ke generatedFiles
-          generatedFiles.push({ name: `${filename}.vcf`, content: vcfContent });
+        generatedFiles.push({ name: `${filename}.vcf`, content: vcfContent });
 
-          // Download langsung juga (fungsi lama tetap jalan)
-          const blob = new Blob([vcfContent], { type: 'text/vcard' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${filename}.vcf`;
-          a.textContent = `Download ${filename}.vcf`;
-          a.style.display = 'block';
-          a.click();
-          URL.revokeObjectURL(url);
-        }
+        alert(`File ${filename}.vcf berhasil digenerate!`);
       });
 
       fileAreas.appendChild(fileNameLabel);
@@ -73,17 +53,41 @@ document.getElementById('processFilesBtn').addEventListener('click', function ()
   });
 });
 
-// Tombol Proses ZIP
+// Proses ZIP (fix data hasil editan terbaru)
 document.getElementById('processZipBtn').addEventListener('click', function () {
+  const globalContactName = document.getElementById('globalContactNameInput').value.trim();
+  generatedFiles = []; // reset ulang supaya pakai data edit terbaru
+
+  const fileAreas = document.getElementById('file-areas');
+  const blocks = fileAreas.querySelectorAll('.file-name-label');
+
+  blocks.forEach((label, i) => {
+    const fileNameInput = fileAreas.querySelectorAll('.file-name-input')[i];
+    const textarea = fileAreas.querySelectorAll('textarea')[i];
+
+    const lines = textarea.value.split('\n').map(line => line.trim()).filter(l => l);
+    const filename = fileNameInput.value.trim() || label.textContent.replace('Nama File Asal: ', '').replace(/\.[^/.]+$/, '');
+    const contactBase = globalContactName || filename;
+
+    let vcfContent = '';
+    lines.forEach((num, idx) => {
+      let phone = num.startsWith('+') ? num : `+${num}`;
+      vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:${contactBase} ${idx + 1}\nTEL:${phone}\nEND:VCARD\n\n`;
+    });
+
+    generatedFiles.push({ name: `${filename}.vcf`, content: vcfContent });
+  });
+
   if (generatedFiles.length === 0) {
-    alert('Belum ada file VCF yang digenerate!');
+    alert('Belum ada file yang bisa diproses!');
     return;
   }
+
   document.getElementById('downloadZipBtn').disabled = false;
-  alert('File siap diunduh dalam bentuk ZIP');
+  alert('Data sudah difiks! Klik Download ZIP untuk mengunduh.');
 });
 
-// Tombol Download ZIP
+// Download ZIP
 document.getElementById('downloadZipBtn').addEventListener('click', function () {
   if (generatedFiles.length === 0) return;
 
@@ -92,16 +96,13 @@ document.getElementById('downloadZipBtn').addEventListener('click', function () 
     zip.file(file.name, file.content);
   });
 
-  // Tentukan nama zip
   let zipNameInput = document.getElementById('zipFileNameInput').value.trim();
   let zipName = zipNameInput ? zipNameInput + '.zip' : 'contacts.zip';
 
   zip.generateAsync({ type: 'blob' }).then(function (content) {
     const a = document.createElement('a');
-    const url = URL.createObjectURL(content);
-    a.href = url;
+    a.href = URL.createObjectURL(content);
     a.download = zipName;
     a.click();
-    URL.revokeObjectURL(url);
   });
 });
